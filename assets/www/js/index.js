@@ -127,21 +127,32 @@ $(document).bind('pageinit', function() {
 	});
 	
 	$("#btn_records").click(function () {
+		var next = api_shared_item_by_me;
+		while ( next != false ) {
 		$.ajax({
-			url: url_api + api_shared_item_by_me,
+			url: url_api + next,
 			type: "GET",
 			dataType: "json",
 			cache: false,
+			async: false,
 			headers: {"AUTHORIZATION": "Bearer " + ls.getItem("m_token")},
 			success: function (data) {				
 				if ( data['meta']['total_count'] == 0 ) {
 					alert("You have no share log!");
+					next = false;
 					return;
-				}
+				}				
 				
-				db_manager.insert_logs(data['objects']);
-				db_manager.get_logs();
+				db_manager.insert_logs(data['objects']);				
+				
+				if ( data['meta']['next'] != null ) {
+					next = data['meta']['next'];
+				} else {
+					next = false;
+				}
 			}
 			});
+		db_manager.get_logs();
+		}
 	});
 });
