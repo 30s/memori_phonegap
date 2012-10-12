@@ -1,53 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
-var app = {
-    // Application Constructor
-    initialize: function() {
-        this.bindEvents();
-    },
-    // Bind Event Listeners
-    //
-    // Bind any events that are required on startup. Common events are:
-    // 'load', 'deviceready', 'offline', and 'online'.
-    bindEvents: function() {
-        document.addEventListener('deviceready', this.onDeviceReady, false);
-    },
-    // deviceready Event Handler
-    //
-    // The scope of 'this' is the event. In order to call the 'receivedEvent'
-    // function, we must explicity call 'app.receivedEvent(...);'
-    onDeviceReady: function() {
-        app.receivedEvent('deviceready');
-    },
-    // Update DOM on a Received Event
-    receivedEvent: function(id) {
-        var parentElement = document.getElementById(id);
-        var listeningElement = parentElement.querySelector('.listening');
-        var receivedElement = parentElement.querySelector('.received');
-
-        listeningElement.setAttribute('style', 'display:none;');
-        receivedElement.setAttribute('style', 'display:block;');
-
-        console.log('Received Event: ' + id);
-    }
-};
-
 $.support.cors = true;
 
 var cb = window.plugins.childBrowser;
@@ -91,6 +41,57 @@ var show_profile = function() {
 	$("#uid").text(ls.getItem("m_uid"));
 	$("#profile").show();
 };
+
+var db_manager = {
+		init: function () {
+			this.db = window.openDatabase("memori_pg", "1.0", "memori_pg", 200000);
+			this.db.transaction(this.create_tables, this.error, this.success);
+		},
+		
+		create_tables: function (tx) {
+			tx.executeSql('CREATE TABLE IF NOT EXISTS ShareLog (id unique, created_at, emails, photos)');
+		},
+		
+		insert_logs: function(logs) {
+			this.db.transaction(function(tx) { db_manager._insert_logs(tx, logs) }, this.error, this.success);
+		},
+		
+		_insert_logs: function(tx, logs) {			
+			logs.forEach(function (val, idx) {
+				console.log(val['id']);
+				tx.executeSql('INSERT INTO ShareLog (id, created_at, emails, photos) VALUES (?, ?, ?, ?)',
+						[val['id'], val['created_at'], val['emails'], val['photos'].join()]);
+			});
+		},
+		
+		get_logs: function() {
+			this.db.transaction( function(tx) { 
+				tx.executeSql('SELECT * FROM ShareLog', [], db_manager._get_logs, db_manager.error); 
+			}); 		
+		},
+		
+		_get_logs: function(tx, ret) {
+			var len = ret.rows.length;
+			var $lst = $("#lst_records");
+			$lst.empty();
+		    for (var i=0; i<len; i++){				
+				$lst.append('<li><a href="' + url_www + 'share/email/' + 
+					ret.rows.item(i).id + '/">' + 
+					ret.rows.item(i).created_at + '</a></li>');						    
+		    }
+		    $lst.listview('refresh');
+		},
+		
+	    error: function error(err) {	    	
+	        console.log("error " + err.code + ": " + err.message);
+	    },
+	    
+	    success: function success() {
+	    	console.log("success");
+	    }
+};
+db_manager.init();
+db_manager.get_logs();
 
 $(document).bind('pageinit', function() {
 	if ( ls.getItem("uid") != undefined ) {
@@ -138,12 +139,8 @@ $(document).bind('pageinit', function() {
 					return;
 				}
 				
-				var $lst = $("#lst_records");
-				$lst.empty();
-				data['objects'].forEach(function (val, idx) {
-					$lst.append('<li><a href="' + url_www + 'share/email/' + val['id'] + '/">' + val['created_at'] + '</a></li>');
-				});
-				$lst.listview('refresh');
+				db_manager.insert_logs(data['objects']);
+				db_manager.get_logs();
 			}
 			});
 	});
