@@ -21,7 +21,8 @@
     <div data-role="page" id="home">
       <div data-theme="c" data-role="header" data-position="fixed">
 	<h1>记得</h1>
-      </div>
+      </div><!-- header -->
+
       <div data-role="content">
 	<div id="login">
 	  <a id="btn_weibo_login" href="#home" data-role="button">新浪微博登录</a>
@@ -36,8 +37,27 @@
 	  <ul id="lst_records" data-inset="true" data-role="listview">	
 	  </ul>
 	</div>
-      </div>
-    </div>
+      </div><!-- content -->
+
+      <div data-theme="c" data-role="footer" data-position="fixed">		
+	<div data-role="navbar">
+	  <ul>
+	    <li><a href="#">分享记录</a></li>
+	    <li><a id="btn_snapshot" href="#photo">拍照</a></li>
+	    <li><a href="#">照片流</a></li>
+	  </ul>
+	</div><!-- /navbar -->
+      </div><!-- /footer -->
+
+    </div><!-- home -->
+
+    <div data-role="page" id="photo">
+
+      <div data-role="content">
+	<img id="photo_view" />
+      </div><!-- content -->
+
+    </div><!-- home -->
 
     <script type="text/javascript" src="cordova-2.1.0.js"></script>
     <script type="text/javascript" charset="utf-8" src="childbrowser.js"></script>	

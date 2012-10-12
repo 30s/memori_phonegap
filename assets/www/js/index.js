@@ -110,6 +110,23 @@ var db_manager = {
 db_manager.init();
 db_manager.get_logs();
 
+var camera = {
+    on_snapshot_success: function(image) {
+	console.log("image: " + image);
+	$("#photo_view")[0].src = image;
+    },
+    
+    on_snapshot_fail: function() {
+	console.log("snapshot failed!");
+    },
+
+    snapshot: function () {
+	navigator.camera.getPicture(this.on_snapshot_success, this.on_snapshot_fail, 
+				    { quality: 50, destinationType: Camera.DestinationType.FILE_URI });
+    }
+};
+
+
 $(document).bind('pageinit', function() {
     if ( ls.getItem("uid") != undefined ) {
 	memori_register_by_weibo();
@@ -171,5 +188,9 @@ $(document).bind('pageinit', function() {
 	    });
 	    db_manager.get_logs();
 	}
+    });
+
+    $("#btn_snapshot").click(function() {
+	camera.snapshot();
     });
 });
